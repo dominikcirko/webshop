@@ -13,10 +13,8 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
-    <Folder Include="DataAccess\Repositories\Interfaces\" />
     <Folder Include="Models\" />
     <Folder Include="Configurations\" />
-    <Folder Include="DTOs\" />
     <Folder Include="Utilities\" />
     <Folder Include="Services\Interfaces\" />
     <Folder Include="ViewModels\" />
