@@ -59,17 +59,14 @@ namespace webshopAPI.DAL.Repositories.Implementations
 
         public async Task<User> AuthenticateAsync(string username, string password)
         {
-            // Retrieve user by username
             var user = await GetByUsernameAsync(username);
+
             if (user == null)
-                return null;
+                throw new UnauthorizedAccessException("User not found.");
 
-            // Compare the provided password with the stored Password
-            // This is not secure in production — you'd normally hash and salt the password.
-            if (user.Password == password)
-                return user;
-
-            return null;
+            if (user.Password != password)
+                throw new UnauthorizedAccessException("Invalid password.");
+            return user;
         }
 
         public async Task<IEnumerable<User>> GetAdminsAsync()

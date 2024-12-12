@@ -2,7 +2,7 @@
 
 namespace webshopAPI.DataAccess.Repositories.Interfaces
 {
-    public interface IItemCategoryRepository : IRepository<ItemCategory>
+    public interface IItemCategoryRepository : IGenericRepository<ItemCategory>
     {
         Task<ItemCategory> GetByNameAsync(string categoryName);
         Task<bool> CategoryExistsAsync(string categoryName);

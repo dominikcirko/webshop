@@ -1,8 +1,10 @@
-﻿using webshopAPI.Models;
+﻿using System.Threading.Tasks;
+using System.Collections.Generic;
+using webshopAPI.Models;
 
-namespace webshopAPI.DataAccess.Repositories.Interfaces
+namespace webshopAPI.Services.Interfaces
 {
-    public interface IUserRepository : IRepository<User>
+    public interface IUserService : IGenericService<User>
     {
         Task<User> GetByUsernameAsync(string username);
         Task<User> GetByEmailAsync(string email);

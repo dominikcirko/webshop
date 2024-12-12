@@ -2,7 +2,7 @@
 
 namespace webshopAPI.DataAccess.Repositories.Interfaces
 {
-    public interface ICartItemRepository : IRepository<CartItem>
+    public interface ICartItemRepository : IGenericRepository<CartItem>
     {
         Task<IEnumerable<CartItem>> GetByCartIdAsync(int cartId);
     }

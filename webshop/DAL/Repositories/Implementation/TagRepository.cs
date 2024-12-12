@@ -53,7 +53,6 @@ namespace webshopAPI.DAL.Repositories.Implementations
 
         public async Task<IEnumerable<Tag>> GetTagsByItemIdAsync(int itemId)
         {
-            // Assuming Tag-Item relationship allows this query:
             return await _context.Tags
                 .Where(t => t.Items.Any(i => i.IDItem == itemId))
                 .ToListAsync();

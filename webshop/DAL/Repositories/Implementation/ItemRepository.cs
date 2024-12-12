@@ -82,7 +82,6 @@ namespace webshopAPI.DAL.Repositories.Implementations
 
         public async Task<bool> IsInStockAsync(int itemId)
         {
-            // Check if item is in stock
             var inStock = await _context.Items
                 .Where(i => i.IDItem == itemId)
                 .Select(i => i.InStock)
