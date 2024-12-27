@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using webshopAPI.Services.Interfaces;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Controllers
 {
@@ -18,14 +19,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CartItem>>> GetAll()
+        public async Task<ActionResult<IEnumerable<CartItemDTO>>> GetAll()
         {
             var cartItems = await _cartItemService.GetAllAsync();
             return Ok(cartItems);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<CartItem>> GetById(int id)
+        public async Task<ActionResult<CartItemDTO>> GetById(int id)
         {
             var cartItem = await _cartItemService.GetByIdAsync(id);
             if (cartItem == null)
@@ -36,14 +37,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<CartItem>> Add(CartItem cartItem)
+        public async Task<ActionResult<CartItemDTO>> Add(CartItemDTO cartItem)
         {
             await _cartItemService.AddAsync(cartItem);
             return CreatedAtAction(nameof(GetById), new { id = cartItem.IDCartItem }, cartItem);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, CartItem cartItem)
+        public async Task<IActionResult> Update(int id, CartItemDTO cartItem)
         {
             if (id != cartItem.IDCartItem)
             {
@@ -61,8 +62,8 @@ namespace webshopAPI.Controllers
             return NoContent();
         }
 
-        [HttpGet("ByCart/{cartId}")]
-        public async Task<ActionResult<IEnumerable<CartItem>>> GetByCartId(int cartId)
+        [HttpGet("cart-items/{cartId}")]
+        public async Task<ActionResult<IEnumerable<CartItemDTO>>> GetByCartId(int cartId)
         {
             var cartItems = await _cartItemService.GetByCartIdAsync(cartId);
             return Ok(cartItems);

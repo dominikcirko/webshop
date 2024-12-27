@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using webshopAPI.Services.Interfaces;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Controllers
 {
@@ -18,14 +19,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderItem>>> GetAll()
+        public async Task<ActionResult<IEnumerable<OrderItemDTO>>> GetAll()
         {
             var orderItems = await _orderItemService.GetAllAsync();
             return Ok(orderItems);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<OrderItem>> GetById(int id)
+        public async Task<ActionResult<OrderItemDTO>> GetById(int id)
         {
             var orderItem = await _orderItemService.GetByIdAsync(id);
             if (orderItem == null)
@@ -36,14 +37,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<OrderItem>> Add(OrderItem orderItem)
+        public async Task<ActionResult<OrderItemDTO>> Add(OrderItemDTO orderItem)
         {
             await _orderItemService.AddAsync(orderItem);
             return CreatedAtAction(nameof(GetById), new { id = orderItem.IDOrderItem }, orderItem);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, OrderItem orderItem)
+        public async Task<IActionResult> Update(int id, OrderItemDTO orderItem)
         {
             if (id != orderItem.IDOrderItem)
             {
@@ -61,17 +62,17 @@ namespace webshopAPI.Controllers
             return NoContent();
         }
 
-        [HttpGet("ByOrder/{orderId}")]
-        public async Task<ActionResult<IEnumerable<OrderItem>>> GetByOrderId(int orderId)
+        [HttpGet("orders/{orderId}/items")]
+        public async Task<ActionResult<IEnumerable<OrderItemDTO>>> GetByOrderId(int orderId)
         {
             var orderItems = await _orderItemService.GetByOrderIdAsync(orderId);
             return Ok(orderItems);
         }
 
-        [HttpGet("ByItem/{itemId}")]
-        public async Task<ActionResult<IEnumerable<OrderItem>>> GetByItemId(int itemId)
+        [HttpGet("items/{itemId}/orders")]
+        public async Task<ActionResult<IEnumerable<OrderItemDTO>>> GetByItemId(int itemId)
         {
-            var orderItems = await _orderItemService.GetByIdAsync(itemId);
+            var orderItems = await _orderItemService.GetByItemIdAsync(itemId);
             return Ok(orderItems);
         }
     }

@@ -1,63 +1,106 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using AutoMapper;
+using webshopAPI.DataAccess.Repositories.Interfaces;
+using webshopAPI.DTOs;
 using webshopAPI.Models;
 using webshopAPI.Services.Interfaces;
-using webshopAPI.DataAccess.Repositories.Interfaces;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using webshopAPI.Services.Interface;
 
-namespace webshopAPI.Services.Implementation
+public class UserService : IUserService
 {
-    public class UserService : IUserService
+    private readonly IUserRepository _userRepository;
+    private readonly ILogService _logService;
+    private readonly IMapper _mapper;
+
+    public UserService(IUserRepository userRepository, ILogService logService, IMapper mapper)
     {
-        private readonly IUserRepository _userRepository;
+        _userRepository = userRepository;
+        _logService = logService;
+        _mapper = mapper;
+    }
 
-        public UserService(IUserRepository userRepository)
+    public async Task<IEnumerable<UserDTO>> GetAllAsync()
+    {
+        var users = await _userRepository.GetAllAsync();
+        _logService.LogAction("Info", "Retrieved all users.");
+        return _mapper.Map<IEnumerable<UserDTO>>(users);
+    }
+
+    public async Task<UserDTO> GetByIdAsync(int id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+
+        if (user == null)
         {
-            _userRepository = userRepository;
+            _logService.LogAction("Warning", $"User with id={id} not found.");
+            return null;
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync()
+        _logService.LogAction("Info", $"Retrieved user with id={id}.");
+        return _mapper.Map<UserDTO>(user);
+    }
+
+    public async Task AddAsync(UserDTO userDto)
+    {
+        var user = _mapper.Map<User>(userDto);
+        await _userRepository.AddAsync(user);
+        _logService.LogAction("Info", $"User with id={user.IDUser} has been added.");
+    }
+
+    public async Task UpdateAsync(UserDTO userDto)
+    {
+        var user = _mapper.Map<User>(userDto);
+        await _userRepository.UpdateAsync(user);
+        _logService.LogAction("Info", $"User with id={user.IDUser} has been updated.");
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+
+        if (user == null)
         {
-            return await _userRepository.GetAllAsync();
+            _logService.LogAction("Warning", $"Attempted to delete non-existent user with id={id}.");
+            return;
         }
 
-        public async Task<User> GetByIdAsync(int id)
+        await _userRepository.DeleteAsync(id);
+        _logService.LogAction("Info", $"User with id={id} has been deleted.");
+    }
+
+    public async Task<UserDTO> GetByUsernameAsync(string username)
+    {
+        var user = await _userRepository.GetByUsernameAsync(username);
+
+        if (user == null)
         {
-            return await _userRepository.GetByIdAsync(id);
+            _logService.LogAction("Warning", $"User with username '{username}' not found.");
+            return null;
         }
 
-        public async Task AddAsync(User user)
+        _logService.LogAction("Info", $"Retrieved user with username '{username}'.");
+        return _mapper.Map<UserDTO>(user);
+    }
+
+    public async Task<UserDTO> GetByEmailAsync(string email)
+    {
+        var user = await _userRepository.GetByEmailAsync(email);
+
+        if (user == null)
         {
-            await _userRepository.AddAsync(user);
+            _logService.LogAction("Warning", $"User with email '{email}' not found.");
+            return null;
         }
 
-        public async Task UpdateAsync(User user)
-        {
-            await _userRepository.UpdateAsync(user);
-        }
+        _logService.LogAction("Info", $"Retrieved user with email '{email}'.");
+        return _mapper.Map<UserDTO>(user);
+    }
 
-        public async Task DeleteAsync(int id)
-        {
-            await _userRepository.DeleteAsync(id);
-        }
-
-        public async Task<User> GetByUsernameAsync(string username)
-        {
-            return await _userRepository.GetByUsernameAsync(username);
-        }
-
-        public async Task<User> AuthenticateAsync(string username, string password)
-        {
-            return await _userRepository.AuthenticateAsync(username, password);
-        }
-
-        public async Task<User> GetByEmailAsync(string email)
-        {
-            return await _userRepository.GetByEmailAsync(email);
-        }
-
-        public async Task<IEnumerable<User>> GetAdminsAsync()
-        {
-            return await _userRepository.GetAdminsAsync();
-        }
+    public async Task<IEnumerable<UserDTO>> GetAdminsAsync()
+    {
+        var admins = await _userRepository.GetAdminsAsync();
+        _logService.LogAction("Info", "Retrieved all admins.");
+        return _mapper.Map<IEnumerable<UserDTO>>(admins);
     }
 }

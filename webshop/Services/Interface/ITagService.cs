@@ -1,12 +1,13 @@
 ﻿using System.Threading.Tasks;
 using System.Collections.Generic;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Services.Interfaces
 {
-    public interface ITagService : IGenericService<Tag>
+    public interface ITagService : IGenericService<TagDTO>
     {
-        Task<Tag> GetByNameAsync(string name);
-        Task<IEnumerable<Tag>> GetTagsByItemIdAsync(int itemId);
+        Task<TagDTO> GetByNameAsync(string name);
+        Task<IEnumerable<TagDTO>> GetTagsByItemIdAsync(int itemId);
     }
 }

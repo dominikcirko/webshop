@@ -1,14 +1,14 @@
 ﻿using System.Threading.Tasks;
 using System.Collections.Generic;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Services.Interfaces
 {
-    public interface IUserService : IGenericService<User>
+    public interface IUserService : IGenericService<UserDTO>
     {
-        Task<User> GetByUsernameAsync(string username);
-        Task<User> GetByEmailAsync(string email);
-        Task<User> AuthenticateAsync(string username, string password);
-        Task<IEnumerable<User>> GetAdminsAsync();
+        Task<UserDTO> GetByUsernameAsync(string username);
+        Task<UserDTO> GetByEmailAsync(string email);
+        Task<IEnumerable<UserDTO>> GetAdminsAsync();
     }
 }

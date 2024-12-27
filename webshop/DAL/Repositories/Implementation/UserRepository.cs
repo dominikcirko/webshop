@@ -57,18 +57,6 @@ namespace webshopAPI.DAL.Repositories.Implementations
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public async Task<User> AuthenticateAsync(string username, string password)
-        {
-            var user = await GetByUsernameAsync(username);
-
-            if (user == null)
-                throw new UnauthorizedAccessException("User not found.");
-
-            if (user.Password != password)
-                throw new UnauthorizedAccessException("Invalid password.");
-            return user;
-        }
-
         public async Task<IEnumerable<User>> GetAdminsAsync()
         {
             return await _context.Users

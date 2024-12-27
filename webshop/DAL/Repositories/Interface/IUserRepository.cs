@@ -6,7 +6,6 @@ namespace webshopAPI.DataAccess.Repositories.Interfaces
     {
         Task<User> GetByUsernameAsync(string username);
         Task<User> GetByEmailAsync(string email);
-        Task<User> AuthenticateAsync(string username, string password);
         Task<IEnumerable<User>> GetAdminsAsync();
     }
 }

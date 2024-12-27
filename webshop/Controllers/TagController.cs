@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using webshopAPI.Services.Interfaces;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Controllers
 {
@@ -18,14 +19,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Tag>>> GetAll()
+        public async Task<ActionResult<IEnumerable<TagDTO>>> GetAll()
         {
             var tags = await _tagService.GetAllAsync();
             return Ok(tags);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Tag>> GetById(int id)
+        public async Task<ActionResult<TagDTO>> GetById(int id)
         {
             var tag = await _tagService.GetByIdAsync(id);
             if (tag == null)
@@ -36,14 +37,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Tag>> Add(Tag tag)
+        public async Task<ActionResult<TagDTO>> Add(TagDTO tag)
         {
             await _tagService.AddAsync(tag);
             return CreatedAtAction(nameof(GetById), new { id = tag.IDTag }, tag);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Tag tag)
+        public async Task<IActionResult> Update(int id, TagDTO tag)
         {
             if (id != tag.IDTag)
             {
@@ -62,7 +63,7 @@ namespace webshopAPI.Controllers
         }
 
         [HttpGet("ByName/{name}")]
-        public async Task<ActionResult<Tag>> GetByName(string name)
+        public async Task<ActionResult<TagDTO>> GetByName(string name)
         {
             var tag = await _tagService.GetByNameAsync(name);
             if (tag == null)
@@ -73,7 +74,7 @@ namespace webshopAPI.Controllers
         }
 
         [HttpGet("ByItem/{itemId}")]
-        public async Task<ActionResult<IEnumerable<Tag>>> GetTagsByItemId(int itemId)
+        public async Task<ActionResult<IEnumerable<TagDTO>>> GetTagsByItemId(int itemId)
         {
             var tags = await _tagService.GetTagsByItemIdAsync(itemId);
             return Ok(tags);

@@ -1,11 +1,12 @@
 ﻿using System.Threading.Tasks;
 using System.Collections.Generic;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Services.Interfaces
 {
-    public interface ICartService : IGenericService<Cart>
+    public interface ICartService : IGenericService<CartDTO>
     {
-        Task<Cart> GetByUserIdAsync(int userId);
+        Task<CartDTO> GetByUserIdAsync(int userId);
     }
 }

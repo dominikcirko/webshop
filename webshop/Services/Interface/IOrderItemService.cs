@@ -1,11 +1,13 @@
 ﻿using System.Threading.Tasks;
 using System.Collections.Generic;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Services.Interfaces
 {
-    public interface IOrderItemService : IGenericService<OrderItem>
+    public interface IOrderItemService : IGenericService<OrderItemDTO>
     {
-        Task<IEnumerable<OrderItem>> GetByOrderIdAsync(int orderId);
+        Task<IEnumerable<OrderItemDTO>> GetByItemIdAsync(int itemId);
+        Task<IEnumerable<OrderItemDTO>> GetByOrderIdAsync(int orderId);
     }
 }

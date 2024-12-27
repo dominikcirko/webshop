@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using webshopAPI.Services.Interfaces;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Controllers
 {
@@ -18,14 +19,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Item>>> GetAll()
+        public async Task<ActionResult<IEnumerable<ItemDTO>>> GetAll()
         {
             var items = await _itemService.GetAllAsync();
             return Ok(items);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Item>> GetById(int id)
+        public async Task<ActionResult<ItemDTO>> GetById(int id)
         {
             var item = await _itemService.GetByIdAsync(id);
             if (item == null)
@@ -36,14 +37,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Item>> Add(Item item)
+        public async Task<ActionResult<ItemDTO>> Add(ItemDTO item)
         {
             await _itemService.AddAsync(item);
             return CreatedAtAction(nameof(GetById), new { id = item.IDItem }, item);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Item item)
+        public async Task<IActionResult> Update(int id, ItemDTO item)
         {
             if (id != item.IDItem)
             {
@@ -61,28 +62,28 @@ namespace webshopAPI.Controllers
             return NoContent();
         }
 
-        [HttpGet("ByCategory/{categoryId}")]
-        public async Task<ActionResult<IEnumerable<Item>>> GetByCategoryId(int categoryId)
+        [HttpGet("categories/{categoryId}/items")]
+        public async Task<ActionResult<IEnumerable<ItemDTO>>> GetByCategoryId(int categoryId)
         {
             var items = await _itemService.GetByCategoryIdAsync(categoryId);
             return Ok(items);
         }
 
-        [HttpGet("ByTag/{tagId?}")]
-        public async Task<ActionResult<IEnumerable<Item>>> GetByTagId(int? tagId)
+        [HttpGet("tags/{tagId?}/items")]
+        public async Task<ActionResult<IEnumerable<ItemDTO>>> GetByTagId(int? tagId)
         {
             var items = await _itemService.GetByTagIdAsync(tagId);
             return Ok(items);
         }
 
-        [HttpGet("SearchByTitle/{title}")]
-        public async Task<ActionResult<IEnumerable<Item>>> SearchByTitle(string title)
+        [HttpGet("items/search")]
+        public async Task<ActionResult<IEnumerable<ItemDTO>>> SearchByTitle([FromQuery] string title)
         {
             var items = await _itemService.SearchByTitleAsync(title);
             return Ok(items);
         }
 
-        [HttpGet("IsInStock/{itemId}")]
+        [HttpGet("items/{itemId}/stock")]
         public async Task<ActionResult<bool>> IsInStock(int itemId)
         {
             var inStock = await _itemService.IsInStockAsync(itemId);

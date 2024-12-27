@@ -21,6 +21,8 @@ public partial class webshopdbContext : DbContext
 
     public virtual DbSet<ItemCategory> ItemCategories { get; set; }
 
+    public virtual DbSet<Log> Logs { get; set; }
+
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<OrderItem> OrderItems { get; set; }
@@ -69,6 +71,13 @@ public partial class webshopdbContext : DbContext
         modelBuilder.Entity<ItemCategory>(entity =>
         {
             entity.HasKey(e => e.IDItemCategory).HasName("PK__ItemCate__00EDF652B6B0864E");
+        });
+
+        modelBuilder.Entity<Log>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Logs__3214EC076074287D");
+
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("(getdate())");
         });
 
         modelBuilder.Entity<Order>(entity =>

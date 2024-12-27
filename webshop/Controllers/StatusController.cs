@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using webshopAPI.Services.Interfaces;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Controllers
 {
@@ -18,14 +19,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Status>>> GetAll()
+        public async Task<ActionResult<IEnumerable<StatusDTO>>> GetAll()
         {
             var statuses = await _statusService.GetAllAsync();
             return Ok(statuses);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Status>> GetById(int id)
+        public async Task<ActionResult<StatusDTO>> GetById(int id)
         {
             var status = await _statusService.GetByIdAsync(id);
             if (status == null)
@@ -36,14 +37,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Status>> Add(Status status)
+        public async Task<ActionResult<StatusDTO>> Add(StatusDTO status)
         {
             await _statusService.AddAsync(status);
             return CreatedAtAction(nameof(GetById), new { id = status.IDStatus }, status);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Status status)
+        public async Task<IActionResult> Update(int id, StatusDTO status)
         {
             if (id != status.IDStatus)
             {
@@ -62,7 +63,7 @@ namespace webshopAPI.Controllers
         }
 
         [HttpGet("ByName/{name}")]
-        public async Task<ActionResult<Status>> GetByName(string name)
+        public async Task<ActionResult<StatusDTO>> GetByName(string name)
         {
             var status = await _statusService.GetByNameAsync(name);
             if (status == null)

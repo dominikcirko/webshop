@@ -47,6 +47,12 @@ public partial class User
 
     public bool IsAdmin { get; set; }
 
+    [MaxLength(1024)]
+    public byte[] PasswordSalt { get; set; }
+
+    [StringLength(255)]
+    public string PasswordHash { get; set; }
+
     [InverseProperty("User")]
     public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
 

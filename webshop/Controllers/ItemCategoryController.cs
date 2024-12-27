@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using webshopAPI.Services.Interfaces;
 using webshopAPI.Models;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.Controllers
 {
@@ -18,14 +19,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ItemCategory>>> GetAll()
+        public async Task<ActionResult<IEnumerable<ItemCategoryDTO>>> GetAll()
         {
             var itemCategories = await _itemCategoryService.GetAllAsync();
             return Ok(itemCategories);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ItemCategory>> GetById(int id)
+        public async Task<ActionResult<ItemCategoryDTO>> GetById(int id)
         {
             var itemCategory = await _itemCategoryService.GetByIdAsync(id);
             if (itemCategory == null)
@@ -36,14 +37,14 @@ namespace webshopAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ItemCategory>> Add(ItemCategory itemCategory)
+        public async Task<ActionResult<ItemCategoryDTO>> Add(ItemCategoryDTO itemCategory)
         {
             await _itemCategoryService.AddAsync(itemCategory);
             return CreatedAtAction(nameof(GetById), new { id = itemCategory.IDItemCategory }, itemCategory);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, ItemCategory itemCategory)
+        public async Task<IActionResult> Update(int id, ItemCategoryDTO itemCategory)
         {
             if (id != itemCategory.IDItemCategory)
             {
@@ -61,8 +62,8 @@ namespace webshopAPI.Controllers
             return NoContent();
         }
 
-        [HttpGet("ByName/{name}")]
-        public async Task<ActionResult<ItemCategory>> GetByName(string name)
+        [HttpGet("item-categories/{name}")]
+        public async Task<ActionResult<ItemCategoryDTO>> GetByName(string name)
         {
             var itemCategory = await _itemCategoryService.GetByNameAsync(name);
             if (itemCategory == null)
