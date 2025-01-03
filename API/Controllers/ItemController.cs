@@ -21,8 +21,8 @@ namespace webshopAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ItemDTO>>> GetAll()
         {
-            var items = await _itemService.GetAllAsync();
-            return Ok(items);
+            var allItems = await _itemService.GetAllAsync();
+            return Ok(allItems);
         }
 
         [HttpGet("{id}")]

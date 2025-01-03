@@ -33,7 +33,7 @@ public class LoginModel : PageModel
             {
                 var jsonResponse = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
                 var token = jsonResponse["token"];
-                return RedirectToPage("/Index");
+                return RedirectToPage("/Home");
             }
             else
             {
