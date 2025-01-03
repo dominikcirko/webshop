@@ -1,0 +1,66 @@
+﻿@page
+@model CartModel
+@{
+    ViewData["Title"] = "My Cart";
+}
+
+<div class="container mt-5">
+    <h1 class="mb-4">My Cart</h1>
+
+    @* Mock Data for demonstration *@
+    @{
+        var cartItems = new List<dynamic>
+    {
+        new { ItemTitle = "Item 1", Quantity = 2, Price = (decimal)19.99, Total = (decimal)(2 * 19.99) },
+        new { ItemTitle = "Item 2", Quantity = 1, Price = (decimal)9.99, Total = (decimal)(1 * 9.99) },
+        new { ItemTitle = "Item 3", Quantity = 3, Price = (decimal)14.99, Total = (decimal)(3 * 14.99) },
+    };
+
+        var cartTotal = cartItems.Sum(item => (decimal)item.Total);
+    }
+
+
+    @if (cartItems.Any())
+    {
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in cartItems)
+                {
+                    <tr>
+                        <td>@item.ItemTitle</td>
+                        <td>
+                            <form method="post" asp-page-handler="UpdateQuantity">
+                                <input type="number" name="quantity" value="@item.Quantity" min="1" class="form-control d-inline-block" style="width: 70px;" />
+                                <button type="submit" class="btn btn-primary btn-sm ms-2">Update</button>
+                            </form>
+                        </td>
+                        <td>$@item.Price</td>
+                        <td>$@item.Total</td>
+                        <td>
+                            <form method="post" asp-page-handler="RemoveItem">
+                                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="text-end">
+            <h4>Total: $@cartTotal</h4>
+            <button class="btn btn-success mt-2">Proceed to Checkout</button>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">Your cart is empty.</p>
+    }
+</div>

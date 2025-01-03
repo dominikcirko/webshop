@@ -4,10 +4,12 @@ using System.Threading.Tasks;
 using webshopAPI.Services.Interfaces;
 using webshopAPI.Models;
 using webshopAPI.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace webshopAPI.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
     public class CartItemController : ControllerBase
     {
@@ -37,8 +39,13 @@ namespace webshopAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<CartItemDTO>> Add(CartItemDTO cartItem)
+        public async Task<ActionResult<CartItemDTO>> Add([FromBody] CartItemDTO cartItem)
         {
+            if (cartItem == null || cartItem.ItemID <= 0 || cartItem.Quantity <= 0)
+            {
+                return BadRequest("Invalid item or quantity.");
+            }
+
             await _cartItemService.AddAsync(cartItem);
             return CreatedAtAction(nameof(GetById), new { id = cartItem.IDCartItem }, cartItem);
         }

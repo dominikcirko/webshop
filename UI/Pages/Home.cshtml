@@ -25,14 +25,13 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="ms-auto d-flex">
                     <a class="btn btn-outline-primary me-2" href="/Profile">Profile</a>
+                    <a class="btn btn-outline-success me-2" href="/Cart">My Cart</a>
                     <a class="btn btn-outline-danger" href="/Logout">Logout</a>
                 </div>
             </div>
         </div>
     </nav>
 </header>
-
-
 
 <main class="container mt-4">
     <section class="search-bar mb-4">
@@ -56,24 +55,30 @@
     </section>
 
     <section class="item-grid">
-        @if (paginatedItems.Any())
+        @if (Model.Items != null && Model.Items.Any())
         {
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-                @foreach (var item in paginatedItems)
+                @foreach (var item in Model.Items.Take(8))
                 {
                     <div class="col">
                         <div class="card h-100">
-                            <img src="https://via.placeholder.com/150" class="card-img-top" alt="@item.Title">
-                            <div class="card-body">
-                                <h5 class="card-title">@item.Title</h5>
-                                <p class="card-text">@item.Description</p>
-                                <p class="card-text"><strong>Price: $@item.Price</strong></p>
-                                <p class="card-text">
-                                    <span class="badge @(item.InStock ? "bg-success" : "bg-danger")">
-                                        @(item.InStock ? "In Stock" : "Out of Stock")
-                                    </span>
-                                </p>
+                            <a href="/Item?id=@item.IDItem" class="text-decoration-none text-dark">
+                                <img src="https://placehold.co/150" class="card-img-top" alt="@item.Title">
+                                <div class="card-body">
+                                    <h5 class="card-title">@item.Title</h5>
+                                    <p class="card-text">
+                                        @(item.Description.Length > 35 ? item.Description.Substring(0, 35) + "..." : item.Description)
+                                    </p>
+
+                                    <p class="card-text"><strong>Price: $@item.Price</strong></p>
+                                </div>
+                            </a>
+                            <div class="card-footer text-center">
+                                <button class="btn btn-primary w-100" onclick="addToCart(@item.IDItem)" @(item.InStock ? "" : "disabled")>
+                                    Add to Cart
+                                </button>
                             </div>
+
                         </div>
                     </div>
                 }
@@ -84,6 +89,7 @@
             <p class="text-center text-muted">No items found.</p>
         }
     </section>
+    <script src="~/js/cart.js"></script>
 
     <section class="pagination mt-4">
         <nav>
