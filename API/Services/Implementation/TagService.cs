@@ -84,12 +84,5 @@ namespace webshopAPI.Services.Implementation
             _logService.LogAction("Info", $"Retrieved tag with name '{name}'.");
             return _mapper.Map<TagDTO>(tag);
         }
-
-        public async Task<IEnumerable<TagDTO>> GetTagsByItemIdAsync(int itemId)
-        {
-            var tags = await _tagRepository.GetTagsByItemIdAsync(itemId);
-            _logService.LogAction("Info", $"Retrieved tags for item id={itemId}.");
-            return _mapper.Map<IEnumerable<TagDTO>>(tags);
-        }
     }
 }

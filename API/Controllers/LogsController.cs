@@ -18,7 +18,7 @@ namespace webshopAPI.Controllers
             _logService = logService;
         }
 
-        [HttpGet("get/{n?}")]
+        [HttpGet("{n?}")]
         public IActionResult GetLogs(int n = 10)
         {
             var logs = _logService.GetLatestLogs(n);

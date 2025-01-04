@@ -76,7 +76,7 @@ namespace webshopAPI.Controllers
             return Ok(items);
         }
 
-        [HttpGet("items/search")]
+        [HttpGet("items/title/search")]
         public async Task<ActionResult<IEnumerable<ItemDTO>>> SearchByTitle([FromQuery] string title)
         {
             var items = await _itemService.SearchByTitleAsync(title);

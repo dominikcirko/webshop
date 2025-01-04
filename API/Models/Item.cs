@@ -29,8 +29,6 @@ public partial class Item
 
     public int StockQuantity { get; set; }
 
-    public bool InStock { get; set; }
-
     [Column(TypeName = "decimal(10, 2)")]
     public decimal Price { get; set; }
 

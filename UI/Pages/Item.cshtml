@@ -22,8 +22,8 @@
                 <li class="list-group-item"><strong>Stock Quantity:</strong> @Model.Item.StockQuantity</li>
                 <li class="list-group-item">
                     <strong>In Stock:</strong>
-                    <span class="badge @(Model.Item.InStock ? "bg-success" : "bg-danger")">
-                        @(Model.Item.InStock ? "Yes" : "No")
+                    <span class="badge @(Model.Item.StockQuantity > 0 ? "bg-success" : "bg-danger")">
+                        @(Model.Item.StockQuantity > 0 ? "Yes" : "No")
                     </span>
                 </li>
                 <li class="list-group-item"><strong>Price:</strong> $@Model.Item.Price</li>

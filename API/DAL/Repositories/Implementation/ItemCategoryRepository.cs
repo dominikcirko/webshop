@@ -1,60 +1,151 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using webshopAPI.DataAccess.Repositories.Interfaces;
 using webshopAPI.Models;
+using System.Data;
 
 namespace webshopAPI.DAL.Repositories.Implementations
 {
     public class ItemCategoryRepository : IItemCategoryRepository
     {
-        private readonly webshopdbContext _context;
+        private readonly string _connectionString;
 
-        public ItemCategoryRepository(webshopdbContext context)
+        public ItemCategoryRepository(IConfiguration configuration)
         {
-            _context = context;
+            _connectionString = configuration.GetConnectionString("DatabaseConnection");
         }
 
         public async Task<IEnumerable<ItemCategory>> GetAllAsync()
         {
-            return await _context.ItemCategories.ToListAsync();
+            var categories = new List<ItemCategory>();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetAllItemCategories", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        categories.Add(MapReaderToItemCategory(reader));
+                    }
+                }
+            }
+            return categories;
         }
 
         public async Task<ItemCategory> GetByIdAsync(int id)
         {
-            return await _context.ItemCategories.FindAsync(id);
+            ItemCategory category = null;
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetItemCategoryById", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDItemCategory", id);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        category = MapReaderToItemCategory(reader);
+                    }
+                }
+            }
+            return category;
         }
 
         public async Task AddAsync(ItemCategory entity)
         {
-            await _context.ItemCategories.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_CreateItemCategory", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@CategoryName", entity.CategoryName);
+
+                var outputId = new SqlParameter("@IDItemCategory", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                command.Parameters.Add(outputId);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+
+                entity.IDItemCategory = (int)outputId.Value;
+            }
         }
 
         public async Task UpdateAsync(ItemCategory entity)
         {
-            _context.ItemCategories.Update(entity);
-            await _context.SaveChangesAsync();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_UpdateItemCategory", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDItemCategory", entity.IDItemCategory);
+                command.Parameters.AddWithValue("@CategoryName", entity.CategoryName);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
         }
 
         public async Task DeleteAsync(int id)
         {
-            var category = await _context.ItemCategories.FindAsync(id);
-            if (category != null)
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_DeleteItemCategory", connection))
             {
-                _context.ItemCategories.Remove(category);
-                await _context.SaveChangesAsync();
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDItemCategory", id); 
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
             }
         }
 
         public async Task<ItemCategory> GetByNameAsync(string categoryName)
         {
-            return await _context.ItemCategories
-                .FirstOrDefaultAsync(ic => ic.CategoryName == categoryName);
+            ItemCategory category = null;
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetItemCategoryByName", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@CategoryName", categoryName);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        category = MapReaderToItemCategory(reader);
+                    }
+                }
+            }
+            return category;
         }
 
         public async Task<bool> CategoryExistsAsync(string categoryName)
         {
-            return await _context.ItemCategories
-                .AnyAsync(ic => ic.CategoryName == categoryName);
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_CheckItemCategoryExists", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@CategoryName", categoryName);
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+
+                return (int)result > 0;
+            }
+        }
+
+        private ItemCategory MapReaderToItemCategory(SqlDataReader reader)
+        {
+            return new ItemCategory
+            {
+                IDItemCategory = reader.GetInt32(reader.GetOrdinal("IDItemCategory")),
+                CategoryName = reader.GetString(reader.GetOrdinal("CategoryName"))
+            };
         }
     }
 }

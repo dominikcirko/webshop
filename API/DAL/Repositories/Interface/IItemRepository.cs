@@ -7,6 +7,6 @@ namespace webshopAPI.DataAccess.Repositories.Interfaces
         Task<IEnumerable<Item>> GetByCategoryIdAsync(int categoryId);
         Task<IEnumerable<Item>> GetByTagIdAsync(int? tagId);
         Task<IEnumerable<Item>> SearchByTitleAsync(string title);
-        Task<bool> IsInStockAsync(int itemId);
+        Task<int> IsInStockAsync(int itemId);
     }
 }

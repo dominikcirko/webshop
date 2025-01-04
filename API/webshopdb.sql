@@ -1,24 +1,144 @@
+CREATE TABLE Cart (
+    IDCart INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT NOT NULL,
+    FOREIGN KEY (UserID) REFERENCES [User](IDUser)
+);
+GO
+
+CREATE TABLE CartItem (
+    IDCartItem INT PRIMARY KEY IDENTITY(1,1),
+    CartID INT NOT NULL,
+    ItemID INT NOT NULL,
+    Quantity INT NOT NULL,
+    FOREIGN KEY (CartID) REFERENCES Cart(IDCart)
+);
+GO
+
+CREATE TABLE Item (
+    IDItem INT PRIMARY KEY IDENTITY(1,1),
+    ItemCategoryID INT NOT NULL,
+    TagID INT NULL,
+    Title VARCHAR(50) NOT NULL,
+    [Description] VARCHAR(MAX) NOT NULL,
+    StockQuantity INT NOT NULL,
+    Price DECIMAL(10, 2) NOT NULL,
+    [Weight] DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (ItemCategoryID) REFERENCES ItemCategory(IDItemCategory),
+    FOREIGN KEY (TagID) REFERENCES Tag(IDTag)
+);
+GO
+
+CREATE TABLE ItemCategory (
+    IDItemCategory INT PRIMARY KEY IDENTITY(1,1),
+    CategoryName VARCHAR(50) NOT NULL
+);
+GO
+
+CREATE TABLE Logs (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Timestamp DATETIME NOT NULL DEFAULT GETDATE(),
+    Level NVARCHAR(50) NOT NULL,
+    Message NVARCHAR(MAX) NOT NULL
+);
+GO
+
+CREATE TABLE [Order] (
+    IDOrder INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT NOT NULL,
+    StatusID INT NOT NULL,
+    OrderDate DATETIME NOT NULL DEFAULT GETDATE(),
+    TotalAmount DECIMAL(18, 0) NOT NULL,
+    FOREIGN KEY (StatusID) REFERENCES Status(IDStatus),
+    FOREIGN KEY (UserID) REFERENCES Users(IDUser)
+);
+GO
+
+CREATE TABLE OrderItem (
+    IDOrderItem INT PRIMARY KEY IDENTITY(1,1),
+    OrderID INT NOT NULL,
+    ItemID INT NOT NULL,
+    Quantity INT NOT NULL CHECK (Quantity > 0),
+    FOREIGN KEY (ItemID) REFERENCES Item(IDItem),
+    FOREIGN KEY (OrderID) REFERENCES [Order](IDOrder)
+);
+GO
+
+CREATE TABLE [Status] (
+    IDStatus INT PRIMARY KEY IDENTITY(1,1),
+    [Name] VARCHAR(50) NOT NULL,
+    [Description] VARCHAR(MAX) NULL
+);
+GO
+
+CREATE TABLE Tag (
+    IDTag INT PRIMARY KEY IDENTITY(1,1),
+    Name VARCHAR(50) NOT NULL,
+    CONSTRAINT UQ_Tag_Name UNIQUE (Name)
+);
+GO
+
+CREATE TABLE [User] (
+    IDUser INT PRIMARY KEY IDENTITY(1,1),
+    Username VARCHAR(50) NOT NULL,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    Password VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) NOT NULL,
+    PhoneNumber VARCHAR(50) NULL,
+    IsAdmin BIT NOT NULL DEFAULT 0,
+    PasswordSalt VARBINARY(1024) NULL,
+    PasswordHash NVARCHAR(255) NULL,
+    CONSTRAINT UQ_User_Email UNIQUE (Email),
+    CONSTRAINT UQ_User_Username UNIQUE (Username)
+);
+GO
+
+
 CREATE PROCEDURE sp_CreateUser 
     @Username varchar(50),
-	@FirstName varchar(50),
-	@LastName varchar(50),
-	@Password varchar(50),
-	@Email varchar(100),
-	@PhoneNumber varchar(50),
-	@IsAdmin bit,
+    @FirstName varchar(50),
+    @LastName varchar(50),
+    @Password varchar(50),
+    @PasswordSalt varbinary(MAX),
+    @Email varchar(100),
+    @PhoneNumber varchar(50),
+    @IsAdmin bit,
     @IDUser int OUTPUT 
 AS
-	BEGIN
-		INSERT INTO [User](Username, FirstName, LastName, [Password], Email, PhoneNumber, IsAdmin)
-		VALUES(@Username, @FirstName, @LastName, @Password, @Email, @PhoneNumber, @IsAdmin)
-		SET @IDUser = SCOPE_IDENTITY();
-	END
+BEGIN
+    INSERT INTO [User](Username, FirstName, LastName, [Password], PasswordSalt, Email, PhoneNumber, IsAdmin)
+    VALUES(@Username, @FirstName, @LastName, @Password, @PasswordSalt, @Email, @PhoneNumber, @IsAdmin)
+    SET @IDUser = SCOPE_IDENTITY();
+END
 GO
 
 CREATE PROCEDURE sp_GetUserById
     @IDUser int 
 AS
     SELECT  * FROM [User] where IDUser = @IDUser
+GO
+
+CREATE PROCEDURE sp_GetUserByUsername
+    @Username NVARCHAR(50)
+AS
+BEGIN
+    SELECT * FROM [User] WHERE Username = @Username;
+END;
+GO
+
+CREATE PROCEDURE sp_GetUserByEmail
+    @Email NVARCHAR(100)
+AS
+BEGIN
+    SELECT * FROM [User] WHERE Email = @Email;
+END;
+GO
+
+CREATE PROCEDURE sp_GetAdminUsers
+AS
+BEGIN
+    SELECT * FROM [User] WHERE IsAdmin = 1;
+END;
 GO
 
 CREATE PROCEDURE sp_GetAllUsers
@@ -30,6 +150,7 @@ CREATE PROCEDURE sp_UpdateUser
     @IDUser INT,
     @Username NVARCHAR(50),
     @Password NVARCHAR(100),
+    @PasswordSalt varbinary(MAX),
     @Email NVARCHAR(100),
     @FirstName NVARCHAR(50),
     @LastName NVARCHAR(50),
@@ -41,6 +162,7 @@ BEGIN
     SET 
         Username = @Username,
         [Password] = @Password,
+        PasswordSalt = @PasswordSalt,
         Email = @Email,
         FirstName = @FirstName,
         LastName = @LastName,
@@ -105,6 +227,28 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE sp_GetItemCategoryByName
+    @CategoryName NVARCHAR(100)
+AS
+BEGIN
+    SELECT *
+    FROM ItemCategory
+    WHERE CategoryName = @CategoryName;
+END;
+GO
+
+CREATE PROCEDURE sp_CheckItemCategoryExists
+    @CategoryName NVARCHAR(100)
+AS
+BEGIN
+    SELECT CASE 
+               WHEN EXISTS (SELECT 1 FROM ItemCategory WHERE CategoryName = @CategoryName) 
+               THEN 1 
+               ELSE 0 
+           END AS CategoryExists;
+END;
+GO
+
 CREATE PROCEDURE sp_CreateTag
     @Name NVARCHAR(50),
     @IDTag INT OUTPUT
@@ -123,6 +267,14 @@ BEGIN
     SELECT * 
     FROM Tag
     WHERE IDTag = @IDTag;
+END;
+GO
+
+CREATE PROCEDURE sp_GetTagByName
+    @Name NVARCHAR(50)
+AS
+BEGIN
+    SELECT * FROM Tag WHERE Name = @Name;
 END;
 GO
 
@@ -160,14 +312,13 @@ CREATE PROCEDURE sp_CreateItem
     @Title NVARCHAR(50),
     @Description NVARCHAR(MAX),
     @StockQuantity INT,
-    @InStock BIT,
     @Price DECIMAL(10,2),
     @Weight DECIMAL(10,2),
     @IDItem INT OUTPUT
 AS
 BEGIN
-    INSERT INTO Item (ItemCategoryID, TagID, Title, [Description], StockQuantity, InStock, Price, [Weight])
-    VALUES (@ItemCategoryID, @TagID, @Title, @Description, @StockQuantity, @InStock, @Price, @Weight);
+    INSERT INTO Item (ItemCategoryID, TagID, Title, [Description], StockQuantity, Price, [Weight])
+    VALUES (@ItemCategoryID, @TagID, @Title, @Description, @StockQuantity, @Price, @Weight);
     SET @IDItem = SCOPE_IDENTITY();
 END;
 GO
@@ -181,6 +332,49 @@ BEGIN
     WHERE IDItem = @IDItem;
 END;
 GO
+
+CREATE or alter PROCEDURE sp_GetItemsByCategory
+    @ItemCategoryID INT
+AS
+BEGIN
+    SELECT *
+    FROM Item
+    WHERE ItemCategoryID = @ItemCategoryID;
+END;
+GO
+
+
+CREATE PROCEDURE sp_CheckItemStock
+    @IDItem INT
+AS
+BEGIN
+    SELECT CASE WHEN StockQuantity > 0 THEN 1 ELSE 0 END
+    FROM Item
+    WHERE IDItem = @IDItem;
+END;
+GO
+
+CREATE PROCEDURE sp_SearchItemsByTitle
+    @Title NVARCHAR(50)
+AS
+BEGIN
+    SELECT *
+    FROM Item
+    WHERE Title LIKE '%' + @Title + '%';
+END;
+GO
+
+CREATE PROCEDURE sp_GetItemsByTagId
+    @TagID INT = NULL
+AS
+BEGIN
+    SELECT *
+    FROM Item
+    WHERE (@TagID IS NULL AND TagID IS NULL)
+       OR TagID = @TagID;
+END;
+GO
+
 
 CREATE PROCEDURE sp_GetAllItems
 AS
@@ -197,7 +391,6 @@ CREATE PROCEDURE sp_UpdateItem
     @Title NVARCHAR(50),
     @Description NVARCHAR(MAX),
     @StockQuantity INT,
-    @InStock BIT,
     @Price DECIMAL(10,2),
     @Weight DECIMAL(10,2)
 AS
@@ -209,7 +402,6 @@ BEGIN
         Title = @Title,
         [Description] = @Description,
         StockQuantity = @StockQuantity,
-        InStock = @InStock,
         Price = @Price,
         [Weight] = @Weight
     WHERE IDItem = @IDItem;
@@ -244,6 +436,14 @@ BEGIN
     SELECT * 
     FROM [Status]
     WHERE IDStatus = @IDStatus;
+END;
+GO
+
+CREATE PROCEDURE sp_GetStatusByName
+    @Name NVARCHAR(50)
+AS
+BEGIN
+    SELECT * FROM [Status] WHERE Name = @Name;
 END;
 GO
 
@@ -306,6 +506,22 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE sp_GetOrdersByUserId
+    @UserID INT
+AS
+BEGIN
+    SELECT * FROM [Order] WHERE UserID = @UserID;
+END;
+GO
+
+CREATE PROCEDURE sp_GetOrdersByStatus
+    @StatusID INT
+AS
+BEGIN
+    SELECT * FROM [Order] WHERE StatusID = @StatusID;
+END;
+GO
+
 CREATE PROCEDURE sp_GetAllOrders
 AS
 BEGIN
@@ -365,6 +581,26 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE sp_GetOrderItemsByOrderId
+    @OrderID INT
+AS
+BEGIN
+    SELECT *
+    FROM OrderItem
+    WHERE OrderID = @OrderID;
+END;
+GO
+
+CREATE PROCEDURE sp_GetOrderItemsByItemId
+    @ItemID INT
+AS
+BEGIN
+    SELECT *
+    FROM OrderItem
+    WHERE ItemID = @ItemID;
+END;
+GO
+
 CREATE PROCEDURE sp_GetAllOrderItems
 AS
 BEGIN
@@ -398,6 +634,38 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE sp_GetLatestLogs
+    @Count INT
+AS
+BEGIN
+    SELECT TOP (@Count) *
+    FROM [Logs]
+    ORDER BY [Timestamp] DESC;
+END;
+GO
+
+CREATE PROCEDURE sp_GetLogCount
+AS
+BEGIN
+    SELECT COUNT(*) AS LogCount
+    FROM [Logs];
+END;
+GO
+
+CREATE PROCEDURE sp_CreateLog
+    @Timestamp datetime,
+    @Level nvarchar(50),
+    @Message nvarchar(MAX),
+    @Id INT OUTPUT
+AS
+BEGIN
+    INSERT INTO [Logs] (Timestamp, Level, Message)
+    VALUES (@Timestamp, @Level, @Message);
+    
+    SET @Id = SCOPE_IDENTITY();
+END;
+GO
+
 CREATE PROCEDURE sp_CreateCart
     @UserID INT,
     @IDCart INT OUTPUT
@@ -419,6 +687,32 @@ BEGIN
     WHERE IDCart = @IDCart;
 END;
 GO
+
+CREATE PROCEDURE sp_GetCartByUserId
+    @UserID INT
+AS
+BEGIN
+    SELECT *
+    FROM Cart
+    WHERE UserID = @UserID;
+END;
+GO
+
+CREATE PROCEDURE sp_CheckIfCartIsEmpty
+    @IDCart INT
+AS
+BEGIN
+    IF (SELECT COUNT(*) FROM CartItem WHERE CartID = @IDCart) = 0
+    BEGIN
+        SELECT 0;
+    END
+    ELSE
+    BEGIN
+        SELECT 1;
+    END
+END;
+GO
+
 
 CREATE PROCEDURE sp_GetAllCarts
 AS
@@ -469,6 +763,16 @@ BEGIN
     SELECT * 
     FROM CartItem
     WHERE IDCartItem = @IDCartItem;
+END;
+GO
+
+CREATE PROCEDURE sp_GetCartItemsByCartId
+    @CartID INT
+AS
+BEGIN
+    SELECT IDCartItem, CartID, ItemID, Quantity
+    FROM CartItem
+    WHERE CartID = @CartID;
 END;
 GO
 

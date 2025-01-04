@@ -74,7 +74,7 @@
                                 </div>
                             </a>
                             <div class="card-footer text-center">
-                                <button class="btn btn-primary w-100" onclick="addToCart(@item.IDItem)" @(item.InStock ? "" : "disabled")>
+                                <button class="btn btn-primary w-100" onclick="addToCart(@item.IDItem)" @(item.StockQuantity > 0 ? "" : "disabled")>
                                     Add to Cart
                                 </button>
                             </div>

@@ -92,11 +92,11 @@ namespace webshopAPI.Services.Implementation
             return _mapper.Map<IEnumerable<ItemDTO>>(items);
         }
 
-        public async Task<bool> IsInStockAsync(int itemId)
+        public async Task<int> IsInStockAsync(int itemId)
         {
             var inStock = await _itemRepository.IsInStockAsync(itemId);
 
-            if (inStock)
+            if (inStock==1)
             {
                 _logService.LogAction("Info", $"Item with id={itemId} is in stock.");
             }

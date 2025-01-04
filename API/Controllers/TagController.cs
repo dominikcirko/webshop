@@ -72,12 +72,5 @@ namespace webshopAPI.Controllers
             }
             return Ok(tag);
         }
-
-        [HttpGet("ByItem/{itemId}")]
-        public async Task<ActionResult<IEnumerable<TagDTO>>> GetTagsByItemId(int itemId)
-        {
-            var tags = await _tagService.GetTagsByItemIdAsync(itemId);
-            return Ok(tags);
-        }
     }
 }

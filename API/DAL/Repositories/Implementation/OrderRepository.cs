@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using System.Data;
+using Microsoft.Extensions.Configuration;
 using webshopAPI.DataAccess.Repositories.Interfaces;
 using webshopAPI.Models;
 
@@ -6,57 +8,162 @@ namespace webshopAPI.DAL.Repositories.Implementations
 {
     public class OrderRepository : IOrderRepository
     {
-        private readonly webshopdbContext _context;
+        private readonly string _connectionString;
 
-        public OrderRepository(webshopdbContext context)
+        public OrderRepository(IConfiguration configuration)
         {
-            _context = context;
+            _connectionString = configuration.GetConnectionString("DatabaseConnection");
         }
 
         public async Task<IEnumerable<Order>> GetAllAsync()
         {
-            return await _context.Orders.ToListAsync();
+            var orders = new List<Order>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_GetAllOrders", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                orders.Add(MapToOrder(reader));
+            }
+
+            return orders;
         }
 
         public async Task<Order> GetByIdAsync(int id)
         {
-            return await _context.Orders.FindAsync(id);
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_GetOrderById", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@IDOrder", SqlDbType.Int).Value = id;
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return MapToOrder(reader);
+            }
+
+            return null;
         }
 
         public async Task AddAsync(Order entity)
         {
-            await _context.Orders.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_CreateOrder", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@UserID", SqlDbType.Int).Value = entity.UserID;
+            command.Parameters.Add("@StatusID", SqlDbType.Int).Value = entity.StatusID;
+            command.Parameters.Add("@OrderDate", SqlDbType.DateTime).Value = entity.OrderDate;
+            command.Parameters.Add("@TotalAmount", SqlDbType.Decimal).Value = entity.TotalAmount;
+
+            var outputParameter = command.Parameters.Add("@IDOrder", SqlDbType.Int);
+            outputParameter.Direction = ParameterDirection.Output;
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+
+            entity.IDOrder = (int)outputParameter.Value;
         }
 
         public async Task UpdateAsync(Order entity)
         {
-            _context.Orders.Update(entity);
-            await _context.SaveChangesAsync();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_UpdateOrder", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@IDOrder", SqlDbType.Int).Value = entity.IDOrder;
+            command.Parameters.Add("@UserID", SqlDbType.Int).Value = entity.UserID;
+            command.Parameters.Add("@StatusID", SqlDbType.Int).Value = entity.StatusID;
+            command.Parameters.Add("@OrderDate", SqlDbType.DateTime).Value = entity.OrderDate;
+            command.Parameters.Add("@TotalAmount", SqlDbType.Decimal).Value = entity.TotalAmount;
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order != null)
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_DeleteOrder", connection)
             {
-                _context.Orders.Remove(order);
-                await _context.SaveChangesAsync();
-            }
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@IDOrder", SqlDbType.Int).Value = id;
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task<IEnumerable<Order>> GetOrdersByUserIdAsync(int userId)
         {
-            return await _context.Orders
-                .Where(o => o.UserID == userId)
-                .ToListAsync();
+            var orders = new List<Order>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_GetOrdersByUserId", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@UserID", SqlDbType.Int).Value = userId;
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                orders.Add(MapToOrder(reader));
+            }
+
+            return orders;
         }
 
         public async Task<IEnumerable<Order>> GetOrdersByStatusAsync(int statusId)
         {
-            return await _context.Orders
-                .Where(o => o.StatusID == statusId)
-                .ToListAsync();
+            var orders = new List<Order>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_GetOrdersByStatus", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@StatusID", SqlDbType.Int).Value = statusId;
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                orders.Add(MapToOrder(reader));
+            }
+
+            return orders;
+        }
+
+        private static Order MapToOrder(SqlDataReader reader)
+        {
+            return new Order
+            {
+                IDOrder = reader.GetInt32(reader.GetOrdinal("IDOrder")),
+                UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
+                StatusID = reader.GetInt32(reader.GetOrdinal("StatusID")),
+                OrderDate = reader.GetDateTime(reader.GetOrdinal("OrderDate")),
+                TotalAmount = reader.GetDecimal(reader.GetOrdinal("TotalAmount"))
+            };
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using System.Data;
 using webshopAPI.DataAccess.Repositories.Interfaces;
 using webshopAPI.Models;
 
@@ -6,88 +8,215 @@ namespace webshopAPI.DAL.Repositories.Implementations
 {
     public class ItemRepository : IItemRepository
     {
-        private readonly webshopdbContext _context;
+        private readonly string _connectionString;
 
-        public ItemRepository(webshopdbContext context)
+        public ItemRepository(IConfiguration configuration)
         {
-            _context = context;
+            _connectionString = configuration.GetConnectionString("DatabaseConnection");
         }
 
         public async Task<IEnumerable<Item>> GetAllAsync()
         {
-            return await _context.Items.ToListAsync();
+            var items = new List<Item>();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetAllItems", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        items.Add(MapReaderToItem(reader));
+                    }
+                }
+            }
+            return items;
         }
 
         public async Task<Item> GetByIdAsync(int id)
         {
-            return await _context.Items.FindAsync(id);
+            Item item = null;
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetItemById", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDItem", id);
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        item = MapReaderToItem(reader);
+                    }
+                }
+            }
+            return item;
         }
 
         public async Task AddAsync(Item entity)
         {
-            await _context.Items.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_CreateItem", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@ItemCategoryID", entity.ItemCategoryID);
+                command.Parameters.AddWithValue("@TagID", entity.TagID);
+                command.Parameters.AddWithValue("@Title", entity.Title);
+                command.Parameters.AddWithValue("@Description", entity.Description);
+                command.Parameters.AddWithValue("@StockQuantity", entity.StockQuantity);
+                command.Parameters.AddWithValue("@Price", entity.Price);
+                command.Parameters.AddWithValue("@Weight", entity.Weight);
+
+                var outputId = new SqlParameter("@IDItem", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                command.Parameters.Add(outputId);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+                entity.IDItem = (int)outputId.Value;
+            }
         }
 
         public async Task UpdateAsync(Item entity)
         {
-            _context.Items.Update(entity);
-            await _context.SaveChangesAsync();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_UpdateItem", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDItem", entity.IDItem);
+                command.Parameters.AddWithValue("@ItemCategoryID", entity.ItemCategoryID);
+                command.Parameters.AddWithValue("@TagID", entity.TagID);
+                command.Parameters.AddWithValue("@Title", entity.Title);
+                command.Parameters.AddWithValue("@Description", entity.Description);
+                command.Parameters.AddWithValue("@StockQuantity", entity.StockQuantity);
+                command.Parameters.AddWithValue("@Price", entity.Price);
+                command.Parameters.AddWithValue("@Weight", entity.Weight);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
         }
 
         public async Task DeleteAsync(int id)
         {
-            var item = await _context.Items.FindAsync(id);
-            if (item != null)
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_DeleteItem", connection))
             {
-                _context.Items.Remove(item);
-                await _context.SaveChangesAsync();
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDItem", id);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
             }
         }
 
         public async Task<IEnumerable<Item>> GetByCategoryIdAsync(int categoryId)
         {
-            return await _context.Items
-                .Where(i => i.ItemCategoryID == categoryId)
-                .ToListAsync();
+            var items = new List<Item>();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetItemsByCategory", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@ItemCategoryID", categoryId);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        items.Add(MapReaderToItem(reader));
+                    }
+                }
+            }
+            return items;
         }
 
-        public async Task<IEnumerable<Item>> GetByTagIdAsync(int? tagId)
+        public async Task<int> IsInStockAsync(int itemId)
         {
-            if (tagId.HasValue)
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_CheckItemStock", connection))
             {
-                return await _context.Items
-                    .Where(i => i.TagID == tagId.Value)
-                    .ToListAsync();
-            }
-            else
-            {
-                // If tagId is null, return items that have no tag set
-                return await _context.Items
-                    .Where(i => i.TagID == null)
-                    .ToListAsync();
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDItem", itemId);
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+
+                return (int)result;
             }
         }
 
         public async Task<IEnumerable<Item>> SearchByTitleAsync(string title)
         {
-            if (string.IsNullOrEmpty(title))
-                return Enumerable.Empty<Item>();
+            var items = new List<Item>();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_SearchItemsByTitle", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@Title", title);
 
-            var loweredTitle = title.ToLower();
-            return await _context.Items
-                .Where(i => i.Title.ToLower().Contains(loweredTitle))
-                .ToListAsync();
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        items.Add(MapReaderToItem(reader));
+                    }
+                }
+            }
+            return items;
         }
 
-        public async Task<bool> IsInStockAsync(int itemId)
+        public async Task<IEnumerable<Item>> GetByTagIdAsync(int? tagId)
         {
-            var inStock = await _context.Items
-                .Where(i => i.IDItem == itemId)
-                .Select(i => i.InStock)
-                .FirstOrDefaultAsync();
+            var items = new List<Item>();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetItemsByTagId", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                if (tagId.HasValue)
+                {
+                    command.Parameters.AddWithValue("@TagID", tagId.Value);
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("@TagID", DBNull.Value);
+                }
 
-            return inStock;
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        items.Add(MapReaderToItem(reader));
+                    }
+                }
+            }
+            return items;
+        }
+
+
+
+
+
+        private Item MapReaderToItem(SqlDataReader reader)
+        {
+            return new Item
+            {
+                IDItem = reader.GetInt32(reader.GetOrdinal("IDItem")),
+                ItemCategoryID = reader.GetInt32(reader.GetOrdinal("ItemCategoryID")),
+                TagID = reader.IsDBNull(reader.GetOrdinal("TagID")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("TagID")),
+                Title = reader.GetString(reader.GetOrdinal("Title")),
+                Description = reader.GetString(reader.GetOrdinal("Description")),
+                StockQuantity = reader.GetInt32(reader.GetOrdinal("StockQuantity")),
+                Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                Weight = reader.GetDecimal(reader.GetOrdinal("Weight"))
+            };
         }
     }
 }

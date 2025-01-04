@@ -8,7 +8,6 @@
         public string Title { get; set; }
         public string Description { get; set; }
         public int StockQuantity { get; set; }
-        public bool InStock { get; set; }
         public decimal Price { get; set; }
         public decimal Weight { get; set; }
     }

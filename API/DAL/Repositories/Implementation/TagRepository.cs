@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using System.Data;
+using Microsoft.Extensions.Configuration;
 using webshopAPI.DataAccess.Repositories.Interfaces;
 using webshopAPI.Models;
 
@@ -6,56 +8,130 @@ namespace webshopAPI.DAL.Repositories.Implementations
 {
     public class TagRepository : ITagRepository
     {
-        private readonly webshopdbContext _context;
+        private readonly string _connectionString;
 
-        public TagRepository(webshopdbContext context)
+        public TagRepository(IConfiguration configuration)
         {
-            _context = context;
+            _connectionString = configuration.GetConnectionString("DatabaseConnection");
         }
 
         public async Task<IEnumerable<Tag>> GetAllAsync()
         {
-            return await _context.Tags.ToListAsync();
+            var tags = new List<Tag>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_GetAllTags", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                tags.Add(MapToTag(reader));
+            }
+
+            return tags;
         }
 
         public async Task<Tag> GetByIdAsync(int id)
         {
-            return await _context.Tags.FindAsync(id);
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_GetTagById", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@IDTag", SqlDbType.Int).Value = id;
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return MapToTag(reader);
+            }
+
+            return null;
         }
 
         public async Task AddAsync(Tag entity)
         {
-            await _context.Tags.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_CreateTag", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@Name", SqlDbType.NVarChar, 50).Value = entity.Name;
+
+            var outputParameter = command.Parameters.Add("@IDTag", SqlDbType.Int);
+            outputParameter.Direction = ParameterDirection.Output;
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+
+            entity.IDTag = (int)outputParameter.Value;
         }
 
         public async Task UpdateAsync(Tag entity)
         {
-            _context.Tags.Update(entity);
-            await _context.SaveChangesAsync();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_UpdateTag", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@IDTag", SqlDbType.Int).Value = entity.IDTag;
+            command.Parameters.Add("@Name", SqlDbType.NVarChar, 50).Value = entity.Name;
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var tag = await _context.Tags.FindAsync(id);
-            if (tag != null)
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_DeleteTag", connection)
             {
-                _context.Tags.Remove(tag);
-                await _context.SaveChangesAsync();
-            }
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@IDTag", SqlDbType.Int).Value = id;
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task<Tag> GetByNameAsync(string name)
         {
-            return await _context.Tags
-                .FirstOrDefaultAsync(t => t.Name == name);
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_GetTagByName", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@Name", SqlDbType.NVarChar, 50).Value = name;
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return MapToTag(reader);
+            }
+
+            return null;
         }
 
-        public async Task<IEnumerable<Tag>> GetTagsByItemIdAsync(int itemId)
+        private static Tag MapToTag(SqlDataReader reader)
         {
-            return await _context.Tags
-                .Where(t => t.Items.Any(i => i.IDItem == itemId))
-                .ToListAsync();
+            return new Tag
+            {
+                IDTag = reader.GetInt32(reader.GetOrdinal("IDTag")),
+                Name = reader.GetString(reader.GetOrdinal("Name"))
+            };
         }
     }
 }

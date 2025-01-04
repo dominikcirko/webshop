@@ -1,61 +1,146 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using webshopAPI.DataAccess.Repositories.Interfaces;
 using webshopAPI.Models;
+using System.Data;
 
 namespace webshopAPI.DAL.Repositories.Implementations
 {
     public class CartRepository : ICartRepository
     {
-        private readonly webshopdbContext _context;
+        private readonly string _connectionString;
 
-        public CartRepository(webshopdbContext context)
+        public CartRepository(IConfiguration configuration)
         {
-            _context = context;
+            _connectionString = configuration.GetConnectionString("DatabaseConnection");
         }
 
         public async Task<IEnumerable<Cart>> GetAllAsync()
         {
-            return await _context.Carts.ToListAsync();
+            var carts = new List<Cart>();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetAllCarts", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        carts.Add(MapReaderToCart(reader));
+                    }
+                }
+            }
+            return carts;
         }
 
         public async Task<Cart> GetByIdAsync(int id)
         {
-            return await _context.Carts.FindAsync(id);
+            Cart cart = null;
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetCartById", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDCart", id);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        cart = MapReaderToCart(reader);
+                    }
+                }
+            }
+            return cart;
         }
 
         public async Task AddAsync(Cart entity)
         {
-            await _context.Carts.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_AddCart", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@UserID", entity.UserID);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
         }
 
         public async Task UpdateAsync(Cart entity)
         {
-            _context.Carts.Update(entity);
-            await _context.SaveChangesAsync();
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_UpdateCart", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDCart", entity.IDCart);
+                command.Parameters.AddWithValue("@UserID", entity.UserID);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
         }
 
         public async Task DeleteAsync(int id)
         {
-            var cart = await _context.Carts.FindAsync(id);
-            if (cart != null)
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_DeleteCart", connection))
             {
-                _context.Carts.Remove(cart);
-                await _context.SaveChangesAsync();
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDCart", id);
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
             }
         }
 
         public async Task<Cart> GetByUserIdAsync(int userId)
         {
-            return await _context.Carts
-                .Include(c => c.CartItems) // Include items if you need them
-                .FirstOrDefaultAsync(c => c.UserID == userId);
+            Cart cart = null;
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GetCartByUserId", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@UserID", userId);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        cart = MapReaderToCart(reader);
+                    }
+                }
+            }
+            return cart;
         }
 
         public async Task<bool> IsCartEmptyAsync(int cartId)
         {
-            // Check if any CartItems exist for this cart
-            return !await _context.CartItems.AnyAsync(ci => ci.CartID == cartId);
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_CheckIfCartIsEmpty", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@IDCart", cartId);
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+
+                return (int)result == 0;
+            }
+        }
+
+        private Cart MapReaderToCart(SqlDataReader reader)
+        {
+            return new Cart
+            {
+                IDCart = reader.GetInt32(reader.GetOrdinal("IDCart")),
+                UserID = reader.GetInt32(reader.GetOrdinal("UserID"))
+            };
         }
     }
 }

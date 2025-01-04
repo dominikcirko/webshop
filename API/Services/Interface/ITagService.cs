@@ -8,6 +8,5 @@ namespace webshopAPI.Services.Interfaces
     public interface ITagService : IGenericService<TagDTO>
     {
         Task<TagDTO> GetByNameAsync(string name);
-        Task<IEnumerable<TagDTO>> GetTagsByItemIdAsync(int itemId);
     }
 }
