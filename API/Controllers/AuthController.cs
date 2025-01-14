@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using System.Text;
 using webshopAPI.DTOs;
@@ -14,10 +15,12 @@ namespace webshopAPI.Controllers
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
 
+
         public AuthController(IUserService userService, ITokenService tokenService)
         {
             _userService = userService;
             _tokenService = tokenService;
+
         }
 
         [HttpPost("register")]
@@ -50,6 +53,10 @@ namespace webshopAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO loginDTO)
         {
+            if (Request.Cookies.ContainsKey("JwtToken"))
+                Response.Cookies.Delete("JwtToken");
+            
+
             var user = await _userService.GetByEmailAsync(loginDTO.Email);
             if (user == null)
                 return Unauthorized("Invalid credentials");

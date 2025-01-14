@@ -1,10 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
 using webshopAPI.DTOs;
 
+
+[Authorize]
 public class HomeModel : PageModel
 {
     private readonly IHttpClientFactory _httpClientFactory;
@@ -20,7 +19,6 @@ public class HomeModel : PageModel
 
     public async Task OnGetAsync(string search = "", int categoryId = 0)
     {
-        SearchQuery = search;
 
         var client = _httpClientFactory.CreateClient("BackendAPI");
 
@@ -54,4 +52,5 @@ public class HomeModel : PageModel
             Categories = new List<ItemCategoryDTO>();
         }
     }
+
 }

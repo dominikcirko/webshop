@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 public class LoginModel : PageModel
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public LoginModel(IHttpClientFactory httpClientFactory)
+    public LoginModel(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
     {
         _httpClientFactory = httpClientFactory;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     [BindProperty]
@@ -31,9 +34,19 @@ public class LoginModel : PageModel
 
             if (response.IsSuccessStatusCode)
             {
-                var jsonResponse = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                var jsonResponse = JsonSerializer.Deserialize<Dictionary<string, string>>(responseContent);
                 var token = jsonResponse["token"];
-                return RedirectToPage("/Home");
+
+                Response.Cookies.Append("JwtToken", token, new CookieOptions
+                {
+                    HttpOnly = true,  // Prevent access from JavaScript
+                    Secure = true,    // Ensure the cookie is sent over HTTPS
+                    SameSite = SameSiteMode.None, // Prevent CSRF attacks
+                    Expires = DateTime.UtcNow.AddMinutes(60),
+                    Path = "/"
+                });
+
+                return RedirectToPage("/home");
             }
             else
             {
@@ -43,6 +56,7 @@ public class LoginModel : PageModel
         catch (Exception ex)
         {
             Message = $"An error occurred: {ex.Message}";
+
         }
         return Page();
     }
