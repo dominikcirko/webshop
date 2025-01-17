@@ -69,7 +69,7 @@ namespace webshopAPI.Controllers
             return NoContent();
         }
 
-        [HttpGet("cart-items/{cartId}")]
+        [HttpGet("cart/{cartId}")]
         public async Task<ActionResult<IEnumerable<CartItemDTO>>> GetByCartId(int cartId)
         {
             var cartItems = await _cartItemService.GetByCartIdAsync(cartId);

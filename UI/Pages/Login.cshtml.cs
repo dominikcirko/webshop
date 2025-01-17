@@ -39,9 +39,9 @@ public class LoginModel : PageModel
 
                 Response.Cookies.Append("JwtToken", token, new CookieOptions
                 {
-                    HttpOnly = true,  // Prevent access from JavaScript
-                    Secure = true,    // Ensure the cookie is sent over HTTPS
-                    SameSite = SameSiteMode.None, // Prevent CSRF attacks
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None, 
                     Expires = DateTime.UtcNow.AddMinutes(60),
                     Path = "/"
                 });

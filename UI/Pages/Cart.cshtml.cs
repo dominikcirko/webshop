@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using webshopAPI.DTOs;
 
@@ -33,7 +34,7 @@ public class CartModel : PageModel
             throw new InvalidCastException("The User ID claim is not a valid integer.");
         }
 
-        var cart = await FetchCartFromBackend(userId);
+        var cart = await FetchCart(userId);
         foreach (var cartItem in cart.CartItems)
         {
             var itemDetails = await FetchItemDetailsAsync(cartItem.ItemID);
@@ -49,7 +50,7 @@ public class CartModel : PageModel
     {
         await EnsureCartItemsLoaded();
         CartItemsWithDetails[index].CartItem.Quantity = quantity;
-        await UpdateCartItemQuantityInBackend(CartItemsWithDetails[index].CartItem);
+        await UpdateCartItemQuantity(CartItemsWithDetails[index].CartItem);
         return RedirectToPage();
     }
 
@@ -63,7 +64,7 @@ public class CartModel : PageModel
 
     private int? GetUserIdFromClaims()
     {
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "id");
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
         if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
         {
             _logger.LogWarning("Failed to parse User ID from claims.");
@@ -71,28 +72,40 @@ public class CartModel : PageModel
         }
         return userId;
     }
-    private async Task<CartDTO> FetchCartFromBackend(int userId)
+    private async Task<CartDTO> FetchCart(int userId)
     {
+        var token = Request.Cookies["JwtToken"];
+        if (string.IsNullOrEmpty(token))
+        {
+            _logger.LogWarning("JWT token is missing from cookies.");
+            throw new UnauthorizedAccessException("JWT token not found.");
+        }
+
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
         var response = await _httpClient.GetAsync($"/api/cart/users/{userId}");
+
         response.EnsureSuccessStatusCode();
+
         return await response.Content.ReadFromJsonAsync<CartDTO>();
     }
 
-    private async Task UpdateCartItemQuantityInBackend(CartItemDTO cartItem)
+
+    private async Task UpdateCartItemQuantity(CartItemDTO cartItem)
     {
-        var response = await _httpClient.PutAsJsonAsync($"/api/cart/{cartItem.IDCartItem}", cartItem);
+        var response = await _httpClient.PutAsJsonAsync($"/api/cartitem/{cartItem.IDCartItem}", cartItem);
         response.EnsureSuccessStatusCode();
     }
 
     private async Task RemoveCartItemFromBackend(int itemId)
     {
-        var response = await _httpClient.DeleteAsync($"/api/cart/{itemId}");
+        var response = await _httpClient.DeleteAsync($"/api/cartitem/{itemId}");
         response.EnsureSuccessStatusCode();
     }
 
     private async Task<ItemDTO> FetchItemDetailsAsync(int itemId)
     {
-        var response = await _httpClient.GetAsync($"/api/items/{itemId}");
+        var response = await _httpClient.GetAsync($"/api/item/{itemId}");
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<ItemDTO>();
     }
@@ -108,7 +121,7 @@ public class CartModel : PageModel
                 throw new UnauthorizedAccessException("User is not authenticated.");
             }
 
-            var cart = await FetchCartFromBackend(userId.Value);
+            var cart = await FetchCart(userId.Value);
             foreach (var cartItem in cart.CartItems)
             {
                 var itemDetails = await FetchItemDetailsAsync(cartItem.ItemID);

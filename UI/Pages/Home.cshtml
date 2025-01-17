@@ -34,6 +34,18 @@
 </header>
 
 <main class="container mt-4">
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success text-center">
+            @TempData["Message"]
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">
+            @TempData["Error"]
+        </div>
+    }
     <section class="search-bar mb-4">
         <form method="get" class="row g-2">
             <div class="col-md-8">
@@ -74,9 +86,12 @@
                                 </div>
                             </a>
                             <div class="card-footer text-center">
-                                <button class="btn btn-primary w-100" onclick="addToCart(@item.IDItem)" @(item.StockQuantity > 0 ? "" : "disabled")>
-                                    Add to Cart
-                                </button>
+                                <form method="post" asp-page-handler="AddToCart">
+                                    <input type="hidden" name="itemId" value="@item.IDItem" />
+                                    <button class="btn btn-primary w-100" type="submit" @(item.StockQuantity > 0 ? "" : "disabled")>
+                                        Add to Cart
+                                    </button>
+                                </form>
                             </div>
 
                         </div>

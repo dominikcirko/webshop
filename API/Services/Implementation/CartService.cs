@@ -6,6 +6,7 @@ using webshopAPI.Services.Interfaces;
 using webshopAPI.DataAccess.Repositories.Interfaces;
 using AutoMapper;
 using webshopAPI.Services.Interface;
+using Microsoft.EntityFrameworkCore;
 
 namespace webshopAPI.Services.Implementation
 {
@@ -73,16 +74,25 @@ namespace webshopAPI.Services.Implementation
 
         public async Task<CartDTO> GetByUserIdAsync(int userId)
         {
+            CartDTO cartDto = null;
             var cart = await _cartRepository.GetByUserIdAsync(userId);
 
-            if (cart == null)
+            if (cart != null)
             {
-                _logService.LogAction("Warning", $"Cart for user with id={userId} not found.");
-                return null;
+                cartDto = new CartDTO
+                {
+                    IDCart = cart.IDCart,
+                    UserID = cart.UserID,
+                    CartItems = cart.CartItems.Select(ci => new CartItemDTO
+                    {
+                        IDCartItem = ci.IDCartItem,
+                        CartID = ci.CartID,
+                        ItemID = ci.ItemID,
+                        Quantity = ci.Quantity
+                    }).ToList()
+                };
             }
-
-            _logService.LogAction("Info", $"Retrieved cart for user with id={userId}.");
-            return _mapper.Map<CartDTO>(cart);
+            return cartDto;
         }
     }
 }

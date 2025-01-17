@@ -64,15 +64,24 @@ namespace webshopAPI.DAL.Repositories.Implementations
         public async Task AddAsync(CartItem entity)
         {
             using (var connection = new SqlConnection(_connectionString))
-            using (var command = new SqlCommand("sp_AddCartItem", connection))
+            using (var command = new SqlCommand("sp_CreateCartItem", connection))
             {
                 command.CommandType = CommandType.StoredProcedure;
+
                 command.Parameters.AddWithValue("@CartID", entity.CartID);
                 command.Parameters.AddWithValue("@ItemID", entity.ItemID);
                 command.Parameters.AddWithValue("@Quantity", entity.Quantity);
 
+                var idCartItemParameter = new SqlParameter("@IDCartItem", SqlDbType.Int)
+                {
+                    Direction = ParameterDirection.Output
+                };
+                command.Parameters.Add(idCartItemParameter);
+
                 await connection.OpenAsync();
                 await command.ExecuteNonQueryAsync();
+
+                entity.IDCartItem = (int)idCartItemParameter.Value;
             }
         }
 

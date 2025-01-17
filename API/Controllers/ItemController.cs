@@ -25,10 +25,10 @@ namespace webshopAPI.Controllers
             return Ok(allItems);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ItemDTO>> GetById(int id)
+        [HttpGet("{itemId}")]
+        public async Task<ActionResult<ItemDTO>> GetById(int itemId)
         {
-            var item = await _itemService.GetByIdAsync(id);
+            var item = await _itemService.GetByIdAsync(itemId);
             if (item == null)
             {
                 return NotFound();

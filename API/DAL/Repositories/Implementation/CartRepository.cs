@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using webshopAPI.DataAccess.Repositories.Interfaces;
 using webshopAPI.Models;
 using System.Data;
+using webshopAPI.DTOs;
 
 namespace webshopAPI.DAL.Repositories.Implementations
 {
@@ -100,22 +101,56 @@ namespace webshopAPI.DAL.Repositories.Implementations
         public async Task<Cart> GetByUserIdAsync(int userId)
         {
             Cart cart = null;
+
             using (var connection = new SqlConnection(_connectionString))
-            using (var command = new SqlCommand("sp_GetCartByUserId", connection))
             {
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@UserID", userId);
-
-                await connection.OpenAsync();
-
-                using (var reader = await command.ExecuteReaderAsync())
+                using (var command = new SqlCommand("sp_GetCartByUserId", connection))
                 {
-                    if (await reader.ReadAsync())
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@UserID", userId);
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
                     {
-                        cart = MapReaderToCart(reader);
+                        if (await reader.ReadAsync())
+                        {
+                            cart = new Cart
+                            {
+                                IDCart = reader.GetInt32(reader.GetOrdinal("IDCart")),
+                                UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
+                                CartItems = new List<CartItem>()
+                            };
+                        }
+                    }
+                }
+
+                if (cart != null)
+                {
+                    using (var command = new SqlCommand("sp_GetCartItemsByCartId", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@CartID", cart.IDCart);
+
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                var cartItem = new CartItem
+                                {
+                                    IDCartItem = reader.GetInt32(reader.GetOrdinal("IDCartItem")),
+                                    ItemID = reader.GetInt32(reader.GetOrdinal("ItemID")),
+                                    CartID = reader.GetInt32(reader.GetOrdinal("CartID")),
+                                    Quantity = reader.GetInt32(reader.GetOrdinal("Quantity"))
+                                };
+
+                                cart.CartItems.Add(cartItem);
+                            }
+                        }
                     }
                 }
             }
+
             return cart;
         }
 
