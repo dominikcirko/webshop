@@ -5,12 +5,10 @@ using System.Text.Json;
 public class LoginModel : PageModel
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public LoginModel(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
+    public LoginModel(IHttpClientFactory httpClientFactory)
     {
         _httpClientFactory = httpClientFactory;
-        _httpContextAccessor = httpContextAccessor;
     }
 
     [BindProperty]
