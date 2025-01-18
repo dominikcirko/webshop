@@ -78,7 +78,7 @@ public class HomeModel : PageModel
         var userId = GetUserIdFromClaims();
         if (userId == null)
         {
-            TempData["Error"] = "User ID is missing or invalid.";
+            TempData["Error"] = "UserProfile ID is missing or invalid.";
             return RedirectToPage();
         }
 

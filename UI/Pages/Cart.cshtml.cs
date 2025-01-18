@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using webshopAPI.DTOs;
@@ -26,23 +27,30 @@ public class CartModel : PageModel
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
         if (userIdClaim == null)
         {
-            throw new UnauthorizedAccessException("User ID claim is missing. Ensure the user is authenticated.");
+            throw new UnauthorizedAccessException("UserProfile ID claim is missing. Ensure the user is authenticated.");
         }
 
         if (!int.TryParse(userIdClaim.Value, out var userId))
         {
-            throw new InvalidCastException("The User ID claim is not a valid integer.");
+            throw new InvalidCastException("The UserProfile ID claim is not a valid integer.");
         }
 
-        var cart = await FetchCart(userId);
-        foreach (var cartItem in cart.CartItems)
+        try
         {
-            var itemDetails = await FetchItemDetailsAsync(cartItem.ItemID);
-            CartItemsWithDetails.Add(new CartItemWithDetailsDTO
+            var cart = await FetchCart(userId);
+            foreach (var cartItem in cart.CartItems)
             {
-                CartItem = cartItem,
-                ItemDetails = itemDetails
-            });
+                var itemDetails = await FetchItemDetailsAsync(cartItem.ItemID);
+                CartItemsWithDetails.Add(new CartItemWithDetailsDTO
+                {
+                    CartItem = cartItem,
+                    ItemDetails = itemDetails
+                });
+            }
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            CartItemsWithDetails = new List<CartItemWithDetailsDTO>();
         }
     }
 
@@ -67,7 +75,7 @@ public class CartModel : PageModel
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
         if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
         {
-            _logger.LogWarning("Failed to parse User ID from claims.");
+            _logger.LogWarning("Failed to parse UserProfile ID from claims.");
             return null;
         }
         return userId;
@@ -117,8 +125,8 @@ public class CartModel : PageModel
             var userId = GetUserIdFromClaims();
             if (userId == null)
             {
-                _logger.LogWarning("Attempt to load cart items with missing User ID.");
-                throw new UnauthorizedAccessException("User is not authenticated.");
+                _logger.LogWarning("Attempt to load cart items with missing UserProfile ID.");
+                throw new UnauthorizedAccessException("UserProfile is not authenticated.");
             }
 
             var cart = await FetchCart(userId.Value);

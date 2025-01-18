@@ -44,14 +44,16 @@ public partial class User
     [StringLength(50)]
     [Unicode(false)]
     public string PhoneNumber { get; set; }
-
+    [Required]
     public bool IsAdmin { get; set; }
 
+    #nullable enable
     [MaxLength(1024)]
-    public byte[] PasswordSalt { get; set; }
+    public byte[]? PasswordSalt { get; set; }
 
+    #nullable enable
     [StringLength(255)]
-    public string PasswordHash { get; set; }
+    public string? PasswordHash { get; set; }
 
     [InverseProperty("User")]
     public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();

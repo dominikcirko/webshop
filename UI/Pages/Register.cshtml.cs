@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using webshopAPI.DTOs;
 
 public class RegisterModel : PageModel
 {
@@ -50,6 +51,7 @@ public class RegisterModel : PageModel
 
             if (response.IsSuccessStatusCode)
             {
+                var createCartForUser = await client.PostAsJsonAsync("/api/cart", new CartDTO());
                 return RedirectToPage("/Login");
             }
             else

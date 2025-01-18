@@ -6,6 +6,8 @@ using webshopAPI.Services.Interfaces;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using webshopAPI.Services.Interface;
+using System.Security.Cryptography;
+using System.Text;
 
 public class UserService : IUserService
 {
@@ -50,10 +52,30 @@ public class UserService : IUserService
 
     public async Task UpdateAsync(UserDTO userDto)
     {
-        var user = _mapper.Map<User>(userDto);
-        await _userRepository.UpdateAsync(user);
-        _logService.LogAction("Info", $"User with id={user.IDUser} has been updated.");
+        var existingUser = await _userRepository.GetByIdAsync(userDto.IDUser);
+        if (existingUser == null)
+        {
+            throw new Exception($"User with ID {userDto.IDUser} not found.");
+        }
+
+        existingUser.Username = userDto.Username;
+        existingUser.FirstName = userDto.FirstName;
+        existingUser.LastName = userDto.LastName;
+        existingUser.Email = userDto.Email;
+        existingUser.PhoneNumber = userDto.PhoneNumber;
+
+        if (!string.IsNullOrEmpty(userDto.Password))
+        {
+            using var hmac = new HMACSHA256();
+            existingUser.PasswordSalt = hmac.Key;
+            existingUser.Password = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(userDto.Password)));
+        }
+
+        await _userRepository.UpdateAsync(existingUser);
+        _logService.LogAction("Info", $"User with id={userDto.IDUser} has been updated.");
     }
+
+
 
     public async Task DeleteAsync(int id)
     {
