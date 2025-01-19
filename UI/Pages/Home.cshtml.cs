@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using webshopAPI.DTOs;
 
 
@@ -9,6 +10,8 @@ using webshopAPI.DTOs;
 public class HomeModel : PageModel
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    public bool IsAdmin { get; set; }
+
 
     public HomeModel(IHttpClientFactory httpClientFactory)
     {
@@ -22,6 +25,7 @@ public class HomeModel : PageModel
     public async Task OnGetAsync(string search = "", int categoryId = 0)
     {
         var client = _httpClientFactory.CreateClient("BackendAPI");
+        isAdminAsync();
 
         string apiUrl = "/api/item";
 
@@ -62,6 +66,8 @@ public class HomeModel : PageModel
         {
             Categories = new List<ItemCategoryDTO>();
         }
+
+
     }
 
 
@@ -126,4 +132,24 @@ public class HomeModel : PageModel
         return userId;
     }
 
+
+    private async Task isAdminAsync() {
+
+        var userId = User.FindFirst("id")?.Value;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var client = _httpClientFactory.CreateClient("BackendAPI");
+            var token = Request.Cookies["JwtToken"];
+            if (!string.IsNullOrEmpty(token))
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var currentUserResponse = await client.GetAsync($"/api/user/{userId}");
+                if (currentUserResponse.IsSuccessStatusCode)
+                {
+                    var currentUser = await currentUserResponse.Content.ReadFromJsonAsync<UserDTO>();
+                    IsAdmin = currentUser?.IsAdmin ?? false;
+                }
+            }
+        }
+    }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http;
@@ -7,6 +8,7 @@ using webshopAPI.DTOs;
 
 namespace Webshop.Pages
 {
+    [Authorize]
     public class EditProfileModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;

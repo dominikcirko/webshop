@@ -30,7 +30,28 @@
                 <li class="list-group-item"><strong>Weight:</strong> @Model.Item.Weight kg</li>
             </ul>
             <hr>
-            <a href="/Cart/Add?id=@Model.Item.IDItem" class="btn btn-primary">Add to Cart</a>
+            <div class="card-footer text-center">
+                @if (TempData["Message"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                        @TempData["Message"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                        @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                <form method="post" asp-page-handler="AddToCart" asp-route-id="@Model.Item.IDItem">
+                    <input type="hidden" name="itemId" value="@Model.Item.IDItem" />
+                    <button class="btn btn-primary w-100" type="submit" @(Model.Item.StockQuantity > 0 ? "" : "disabled")>
+                        Add to Cart
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
