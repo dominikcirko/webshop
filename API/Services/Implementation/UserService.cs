@@ -64,13 +64,6 @@ public class UserService : IUserService
         existingUser.Email = userDto.Email;
         existingUser.PhoneNumber = userDto.PhoneNumber;
 
-        if (!string.IsNullOrEmpty(userDto.Password))
-        {
-            using var hmac = new HMACSHA256();
-            existingUser.PasswordSalt = hmac.Key;
-            existingUser.Password = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(userDto.Password)));
-        }
-
         await _userRepository.UpdateAsync(existingUser);
         _logService.LogAction("Info", $"User with id={userDto.IDUser} has been updated.");
     }

@@ -11,7 +11,6 @@
 </head>
 <body>
     <header>
-        <!-- Top bar with contact and social -->
         <div class="bg-dark text-white py-2">
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center">
@@ -28,10 +27,8 @@
             </div>
         </div>
 
-        <!-- Main navigation -->
         <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm py-3">
             <div class="container">
-                <!-- Logo with conditional navigation -->
                 @if (User.Identity.IsAuthenticated)
                 {
                     <a class="navbar-brand fw-bold fs-4" asp-page="/Home">
@@ -45,40 +42,14 @@
                     </a>
                 }
 
-                <!-- Search bar -->
-                <form class="d-none d-lg-flex mx-4 flex-grow-1">
-                    <div class="input-group">
-                        <input type="search" class="form-control" placeholder="Search for products..." aria-label="Search">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Toggle button -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <!-- Navigation items -->
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto align-items-center">
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <!-- Menu items for logged-in users -->
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                    Categories
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#">Electronics</a></li>
-                                    <li><a class="dropdown-item" href="#">Clothing</a></li>
-                                    <li><a class="dropdown-item" href="#">Home & Garden</a></li>
-                                </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-page="/Deals">Deals</a>
-                            </li>
                             <li class="nav-item">
                                 <a class="nav-link position-relative" asp-area="" asp-page="/Cart">
                                     <i class="fas fa-shopping-cart"></i>
@@ -100,10 +71,6 @@
                         }
                         else
                         {
-                            <!-- Limited menu items for non-authenticated users -->
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-page="/Deals">Deals</a>
-                            </li>
                             <li class="nav-item ms-2">
                                 <a class="nav-link" asp-area="" asp-page="/Login">
                                     <i class="fas fa-sign-in-alt me-1"></i>Login

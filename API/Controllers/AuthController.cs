@@ -34,7 +34,7 @@ namespace webshopAPI.Controllers
 
             using var hmac = new HMACSHA256();
             var passwordSalt = hmac.Key; 
-            var passwordHash = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDTO.Password))); // Hash the password
+            var passwordHash = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDTO.Password)));
 
             var user = new UserDTO
             {
@@ -71,7 +71,6 @@ namespace webshopAPI.Controllers
 
             var token = _tokenService.GenerateJwtToken(user);
 
-            //create cart for user on first login
             var userCart = await _cartService.GetByUserIdAsync(user.IDUser);
             if (userCart == null)
             {
