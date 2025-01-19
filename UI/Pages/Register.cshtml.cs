@@ -1,69 +1,51 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using webshopAPI.DTOs;
 
-public class RegisterModel : PageModel
+namespace UI.Pages
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public RegisterModel(IHttpClientFactory httpClientFactory)
+    public class RegisterModel : PageModel
     {
-        _httpClientFactory = httpClientFactory;
-    }
+        private readonly IHttpClientFactory _httpClientFactory;
 
-    [BindProperty]
-    public string Username { get; set; }
-
-    [BindProperty]
-    public string Email { get; set; }
-
-    [BindProperty]
-    public string Password { get; set; }
-
-    [BindProperty]
-    public string FirstName { get; set; }
-
-    [BindProperty]
-    public string LastName { get; set; }
-
-    [BindProperty]
-    public string PhoneNumber { get; set; }
-
-    public string Message { get; set; }
-
-    public async Task<IActionResult> OnPostAsync()
-    {
-        try
+        public RegisterModel(IHttpClientFactory httpClientFactory)
         {
-            var client = _httpClientFactory.CreateClient("BackendAPI");
-            var response = await client.PostAsJsonAsync("/api/Auth/register", new
-            {
-                Username,
-                Email,
-                Password,
-                FirstName,
-                LastName,
-                PhoneNumber
-            });
-
-            if (response.IsSuccessStatusCode)
-            {
-                var createCartForUser = await client.PostAsJsonAsync("/api/cart", new CartDTO());
-                return RedirectToPage("/Login");
-            }
-            else
-            {
-                Message = "Registration failed. Try again.";
-            }
-        }
-        catch (Exception ex)
-        {
-            Message = $"An error occurred: {ex.Message}";
+            _httpClientFactory = httpClientFactory;
         }
 
-        return Page();
+        [BindProperty]
+        public RegisterDTO RegisterData { get; set; } = new RegisterDTO();
+
+        public string Message { get; set; }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            try
+            {
+                var client = _httpClientFactory.CreateClient("BackendAPI");
+
+                var response = await client.PostAsJsonAsync("/api/Auth/register", RegisterData);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return RedirectToPage("/Login");
+                }
+                else
+                {
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    Message = $"Registration failed: {errorMessage}";
+                }
+            }
+            catch (Exception ex)
+            {
+                Message = $"An error occurred: {ex.Message}";
+            }
+
+            return Page();
+        }
     }
 }

@@ -15,11 +15,11 @@
                     <form method="post">
                         <div class="mb-3">
                             <label for="Username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="Username" name="Username" value="@Model.Username" required />
+                            <input type="text" class="form-control" id="Username" name="Username" value="@Model.RegisterData.Username" required />
                         </div>
                         <div class="mb-3">
                             <label for="Email" class="form-label">Email</label>
-                            <input type="text" class="form-control" id="Email" name="Email" value="@Model.Email" required />
+                            <input type="text" class="form-control" id="Email" name="Email" value="@Model.RegisterData.Email" required />
                         </div>
                         <div class="mb-3">
                             <label for="Password" class="form-label">Password</label>
@@ -27,15 +27,15 @@
                         </div>
                         <div class="mb-3">
                             <label for="FirstName" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="FirstName" name="FirstName" value="@Model.FirstName" required />
+                            <input type="text" class="form-control" id="FirstName" name="FirstName" value="@Model.RegisterData.FirstName" required />
                         </div>
                         <div class="mb-3">
                             <label for="LastName" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="LastName" name="LastName" value="@Model.LastName" required />
+                            <input type="text" class="form-control" id="LastName" name="LastName" value="@Model.RegisterData.LastName" required />
                         </div>
                         <div class="mb-3">
                             <label for="PhoneNumber" class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" id="PhoneNumber" name="PhoneNumber" value="@Model.PhoneNumber" required />
+                            <input type="text" class="form-control" id="PhoneNumber" name="PhoneNumber" value="@Model.RegisterData.PhoneNumber" required />
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success">Register</button>

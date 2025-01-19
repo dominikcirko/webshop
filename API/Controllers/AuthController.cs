@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using System.Text;
 using webshopAPI.DTOs;
+using webshopAPI.Services.Implementation;
 using webshopAPI.Services.Interface;
 using webshopAPI.Services.Interfaces;
 
@@ -14,13 +15,14 @@ namespace webshopAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
+        private readonly ICartService _cartService;
 
 
-        public AuthController(IUserService userService, ITokenService tokenService)
+        public AuthController(IUserService userService, ITokenService tokenService, ICartService cartService)
         {
             _userService = userService;
             _tokenService = tokenService;
-
+            _cartService = cartService;
         }
 
         [HttpPost("register")]
@@ -68,6 +70,14 @@ namespace webshopAPI.Controllers
                 return Unauthorized("Invalid credentials");
 
             var token = _tokenService.GenerateJwtToken(user);
+
+            //create cart for user on first login
+            var userCart = await _cartService.GetByUserIdAsync(user.IDUser);
+            if (userCart == null)
+            {
+                await _cartService.AddAsync(new CartDTO { UserID = user.IDUser });
+            }
+
             return Ok(new { Token = token });
         }
     }
