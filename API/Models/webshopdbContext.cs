@@ -64,8 +64,6 @@ public partial class webshopdbContext : DbContext
             entity.HasOne(d => d.ItemCategory).WithMany(p => p.Items)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Item__ItemCatego__2E1BDC42");
-
-            entity.HasOne(d => d.Tag).WithMany(p => p.Items).HasConstraintName("FK__Item__TagID__2F10007B");
         });
 
         modelBuilder.Entity<ItemCategory>(entity =>

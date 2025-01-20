@@ -62,6 +62,7 @@ public class AdminUsersModel : PageModel
                 var usersResponse = await client.GetAsync("/api/user");
                 if (usersResponse.IsSuccessStatusCode)
                 {
+                    TempData["SuccessMessage"] = "User deleted successfully!";
                     AllUsers = await usersResponse.Content.ReadFromJsonAsync<List<UserDTO>>() ?? new();
                 }
                 else if (usersResponse.StatusCode == HttpStatusCode.Forbidden)

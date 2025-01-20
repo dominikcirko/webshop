@@ -13,6 +13,14 @@
         </div>
     }
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="row">
         <div class="col-12 mb-4">
             <h1 class="display-5 fw-bold text-center">Users Dashboard</h1>
@@ -101,11 +109,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        })
-    </script>
-}

@@ -40,7 +40,7 @@ namespace webshopAPI.Controllers
         public async Task<ActionResult<ItemDTO>> Add(ItemDTO item)
         {
             await _itemService.AddAsync(item);
-            return CreatedAtAction(nameof(GetById), new { id = item.IDItem }, item);
+            return CreatedAtAction(nameof(GetById), new { itemId = item.IDItem }, item);
         }
 
         [HttpPut("{id}")]
@@ -69,12 +69,12 @@ namespace webshopAPI.Controllers
             return Ok(items);
         }
 
-        [HttpGet("tags/{tagId?}/items")]
-        public async Task<ActionResult<IEnumerable<ItemDTO>>> GetByTagId(int? tagId)
-        {
-            var items = await _itemService.GetByTagIdAsync(tagId);
-            return Ok(items);
-        }
+        //[HttpGet("tags/{tagId?}/items")]
+        //public async Task<ActionResult<IEnumerable<ItemDTO>>> GetByTagId(int? tagId)
+        //{
+        //    var items = await _itemService.GetByTagIdAsync(tagId);
+        //    return Ok(items);
+        //}
 
         [HttpGet("items/title/search")]
         public async Task<ActionResult<IEnumerable<ItemDTO>>> SearchByTitle([FromQuery] string title)

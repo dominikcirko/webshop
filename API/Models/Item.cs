@@ -16,8 +16,6 @@ public partial class Item
 
     public int ItemCategoryID { get; set; }
 
-    public int? TagID { get; set; }
-
     [Required]
     [StringLength(50)]
     [Unicode(false)]
@@ -44,8 +42,4 @@ public partial class Item
 
     [InverseProperty("Item")]
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
-
-    [ForeignKey("TagID")]
-    [InverseProperty("Items")]
-    public virtual Tag Tag { get; set; }
 }

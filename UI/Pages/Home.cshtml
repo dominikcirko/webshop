@@ -110,10 +110,11 @@
 <footer class="bg-dark text-white text-center py-3 mt-4">
     <p class="mb-0">© 2025 Webshop</p>
     <div class="mt-2">
-        <a href="/Logs" class="btn btn-secondary me-2">View Logs</a>
         @if (Model.IsAdmin)
         {
-            <a href="/AdminsUsers" class="btn btn-secondary">Manage Users</a>
+            <a href="/Logs" class="btn btn-secondary me-2">View Logs</a>
+            <a href="/AdminsUsers" class="btn btn-secondary">Manage users</a>
+            <a href="/AdminItems" class="btn btn-secondary">Manage items</a>
         }
     </div>
 </footer>

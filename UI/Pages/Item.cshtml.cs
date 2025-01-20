@@ -37,15 +37,15 @@ public class ItemModel : PageModel
                 ItemCategoryName = category?.CategoryName ?? "Unknown";
             }
 
-            if (Item.TagID.HasValue)
-            {
-                var tagResponse = await client.GetAsync($"/api/tag/{Item.TagID.Value}");
-                if (tagResponse.IsSuccessStatusCode)
-                {
-                    var tag = await tagResponse.Content.ReadFromJsonAsync<TagDTO>();
-                    TagName = tag?.Name ?? "Unknown";
-                }
-            }
+            //if (Item.TagID.HasValue)
+            //{
+            //    var tagResponse = await client.GetAsync($"/api/tag/{Item.TagID.Value}");
+            //    if (tagResponse.IsSuccessStatusCode)
+            //    {
+            //        var tag = await tagResponse.Content.ReadFromJsonAsync<TagDTO>();
+            //        TagName = tag?.Name ?? "Unknown";
+            //    }
+            //}
         }
     }
 

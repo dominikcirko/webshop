@@ -1,13 +1,16 @@
-﻿namespace webshopAPI.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace webshopAPI.DTOs
 {
     public class ItemDTO
     {
         public int IDItem { get; set; }
         public int ItemCategoryID { get; set; }
-        public int? TagID { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
         public int StockQuantity { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:0.00}", ApplyFormatInEditMode = true)]
         public decimal Price { get; set; }
         public decimal Weight { get; set; }
     }

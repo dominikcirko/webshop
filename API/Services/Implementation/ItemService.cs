@@ -78,12 +78,12 @@ namespace webshopAPI.Services.Implementation
             return _mapper.Map<IEnumerable<ItemDTO>>(items);
         }
 
-        public async Task<IEnumerable<ItemDTO>> GetByTagIdAsync(int? tagId)
-        {
-            var items = await _itemRepository.GetByTagIdAsync(tagId);
-            _logService.LogAction("Info", $"Retrieved items for tag id={tagId}.");
-            return _mapper.Map<IEnumerable<ItemDTO>>(items);
-        }
+        //public async Task<IEnumerable<ItemDTO>> GetByTagIdAsync(int? tagId)
+        //{
+        //    var items = await _itemRepository.GetByTagIdAsync(tagId);
+        //    _logService.LogAction("Info", $"Retrieved items for tag id={tagId}.");
+        //    return _mapper.Map<IEnumerable<ItemDTO>>(items);
+        //}
 
         public async Task<IEnumerable<ItemDTO>> SearchByTitleAsync(string title)
         {
